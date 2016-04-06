@@ -16,14 +16,14 @@ namespace miyu_consola
             {
                 //obtain DNS host name
                 //string ip = GetPublicIP();
-                string ip = "192.168.1.155";
+                Console.Write("Escribir IP a conectarse:");
+                string ip = Console.ReadLine(); ;
                 IPAddress IP_address = IPAddress.Parse(ip);
 
 
                 //IPEndPoint end_point = new IPEndPoint(IP_address, 3306);
                 //TcpClient client = new TcpClient(end_point);
-                //Console.Write("Escribir IP a conectarse:");
-                //Console.ReadLine();
+                
                 //TcpClient client = new TcpClient("localhost", 3307);
                 System.Net.Sockets.TcpClient client = new System.Net.Sockets.TcpClient();
                 client.Connect(IP_address, 3307);

