@@ -1,0 +1,2 @@
+﻿todo el directorio c:
+cmd.exe|/C dir>output.txt
